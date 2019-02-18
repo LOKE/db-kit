@@ -1,9 +1,9 @@
 import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
+import Knex from "knex";
 import path from "path";
 import { format as formatUrl } from "url";
 import redactor from "url-auth-redactor";
-import Knex from "knex";
 
 type Connection =
   | string
@@ -16,7 +16,7 @@ type Connection =
     };
 
 interface Options {
-  databaseName: string;
+  connection: Connection;
   migrationsDirectory?: string;
   client?: string;
 }
@@ -30,18 +30,18 @@ type StringTransform = (str: string) => string;
 
 export function createConfig(opts: Options) {
   const {
-    databaseName,
+    connection,
     client = "pg",
     migrationsDirectory = "./lib/postgres/migrations"
   } = opts;
 
-  if (!databaseName) {
-    throw new Error("databaseName is required");
+  if (!connection) {
+    throw new Error("connection is required");
   }
 
   return {
     client,
-    connection: process.env.DATABASE_URL || { database: databaseName },
+    connection,
     pool: {
       min: 2,
       max: 10
@@ -96,7 +96,7 @@ export function formatConnection(connection: Connection) {
   if (typeof connection === "string") {
     return redactor(connection);
   } else {
-    let auth = undefined;
+    let auth;
 
     if (connection.user || connection.password) {
       const u = connection.user || "";
@@ -105,7 +105,6 @@ export function formatConnection(connection: Connection) {
     }
 
     return formatUrl({
-      protocol: "postgres",
       slashes: true,
       auth,
       host: connection.host || "127.0.0.1",
