@@ -1,0 +1,32 @@
+{
+  "name": "@loke/db-kit",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "rm -rf ./dist && tsc && ./copy_templates.sh",
+    "lint": "tslint -p .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dominic Smith",
+  "license": "MIT",
+  "dependencies": {
+    "@types/camelcase-keys": "^4.0.0",
+    "@types/decamelize": "^1.2.0",
+    "camelcase-keys": "^5.0.0",
+    "decamelize": "^2.0.0",
+    "url-auth-redactor": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "prettier": "^1.16.4",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3"
+  }
+}
