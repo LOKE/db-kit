@@ -18,6 +18,7 @@
   "dependencies": {
     "@types/camelcase-keys": "^4.0.0",
     "@types/decamelize": "^1.2.0",
+    "@types/knex": "^0.15.2",
     "camelcase-keys": "^5.0.0",
     "decamelize": "^2.0.0",
     "url-auth-redactor": "^1.0.2"
