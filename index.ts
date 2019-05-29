@@ -1,3 +1,2 @@
-// tslint:disable:no-var-requires
-export const knex = require("./knex");
-/* tslint:enable:no-var-requires */
+import * as _knex from "./knex";
+export const knex = _knex;
