@@ -144,15 +144,27 @@ export async function setup(
   // Connection pool metrics
   setInterval(() => {
     const { pool } = dbClient.client;
-
-    if (!pool || !pool.numUsed) {
-      return;
+    if (pool && pool.numUsed) {
+      // tarn
+      poolUsedGauge.set(pool.numUsed());
+      poolFreeGauge.set(pool.numFree());
+      poolPendingAcquiresGauge.set(pool.numPendingAcquires());
+      poolPendingCreatesGauge.set(pool.numPendingCreates());
     }
 
-    poolUsedGauge.set(pool.numUsed());
-    poolFreeGauge.set(pool.numFree());
-    poolPendingAcquiresGauge.set(pool.numPendingAcquires());
-    poolPendingCreatesGauge.set(pool.numPendingCreates());
+    if (pool && pool.size) {
+      // generic-pool 3.x
+      poolUsedGauge.set(pool.borrowed);
+      poolFreeGauge.set(pool.available);
+      poolPendingAcquiresGauge.set(pool.pending);
+    }
+
+    if (pool && pool.getPoolSize) {
+      // generic-pool 2.x
+      poolUsedGauge.set(pool.getPoolSize() - pool.availableObjectsCount());
+      poolFreeGauge.set(pool.availableObjectsCount());
+      poolPendingAcquiresGauge.set(pool.waitingClientsCount());
+    }
   }, 5000).unref(); // TODO: Add some way to clean this up;
 
   // Migrate up loop
