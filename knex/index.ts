@@ -1,10 +1,17 @@
 import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
-import Knex, { Sql } from "knex";
+import { EventEmitter } from "events";
+import { Migrator, Sql } from "knex";
 import path from "path";
 import { Gauge, Histogram, Registry } from "prom-client";
 import { format as formatUrl } from "url";
 import redactor from "url-auth-redactor";
+
+interface KnexClient extends EventEmitter {
+  // tslint:disable-next-line: no-any
+  client: { pool: any };
+  migrate: Migrator;
+}
 
 type Connection =
   | string
@@ -117,7 +124,7 @@ const queryStartTimes = new WeakMap();
  * @param opts use the defaults unless you have a good reason not to
  */
 export async function setup(
-  dbClient: Knex,
+  dbClient: KnexClient,
   logger: Logger = console,
   opts: SetupOptions = {}
 ) {
