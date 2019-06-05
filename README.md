@@ -20,7 +20,7 @@ const dbClient = knex(dbKit.knex.createConfig({ connection: dbUri }));
 or if you're using a knexfile.js
 
 ```js
-module.exports = knex.createConfig({
+module.exports = dbKit.knex.createConfig({
   connection: process.env.DATABASE_URL || { database: "test-link" }
 });
 ```
@@ -75,4 +75,43 @@ Formats a connection object/string that is valid in `knex()`, redacts the passwo
 
 ```js
 console.log("Using database", dbKit.knex.formatConnection(uri));
+```
+
+### Best Practice
+
+Bringing this all together you should probably have something like...
+
+knexfile.js
+
+```js
+const { knex } = require("@loke/db-kit");
+
+module.exports = knex.createConfig({
+  connection: process.env.DATABASE_URL || { database: "service-name" }
+});
+```
+
+server.js
+
+```js
+const dbKit = require("@loke/db-kit");
+const lokeLogger = require("@loke/logger");
+const promClient = require("prom-client");
+
+const dbConfig = require("./knexfile");
+
+
+dbKit.knex.registerMetrics(promClient.register);
+
+
+function main() {
+  const logger = lokeLogger.create({ metricsRegistry: promClient.register });
+  
+  logger.info("Using database", dbKit.knex.formatConnection(dbConfig.connection));
+  const dbClient = knex(dbConfig, logger.withPrefix("db"));
+  
+  await dbKit.knex.setup(dbClient, dbLogger);
+  
+  // ...
+}
 ```
