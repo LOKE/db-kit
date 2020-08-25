@@ -1,19 +1,19 @@
 import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
 import { EventEmitter } from "events";
-import { Migrator, Sql } from "knex";
+import { Config, Migrator, Sql } from "knex";
 import path from "path";
 import { Gauge, Histogram, Registry } from "prom-client";
 import { format as formatUrl } from "url";
 import redactor from "url-auth-redactor";
 
-interface KnexClient extends EventEmitter {
+export interface KnexClient extends EventEmitter {
   // tslint:disable-next-line: no-any
   client: { pool: any };
   migrate: Migrator;
 }
 
-type Connection =
+export type Connection =
   | string
   | {
       database?: string;
@@ -23,13 +23,13 @@ type Connection =
       port?: number;
     };
 
-interface ConfigOptions {
+export interface ConfigOptions {
   connection: Connection;
   migrationsDirectory?: string;
   client?: string;
 }
 
-interface SetupOptions {
+export interface SetupOptions {
   /**
    * Slow query time in milliseconds,
    * when a query exceeds this time it will be logged as slow
@@ -41,6 +41,21 @@ interface SetupOptions {
    * @default true
    */
   migrateUp?: boolean;
+}
+
+export interface KnexConfig {
+  connection: Connection;
+  client: string;
+  pool: {
+    min: number;
+    max: number;
+  };
+  migrations: {
+    directory: string;
+    stub: string;
+  };
+  postProcessResponse?: Config["postProcessResponse"];
+  wrapIdentifier?: Config["wrapIdentifier"];
 }
 
 interface Logger {
@@ -78,7 +93,7 @@ const queryDuration = new Histogram({
   registers: []
 });
 
-export function createConfig(opts: ConfigOptions) {
+export function createConfig(opts: ConfigOptions): KnexConfig {
   const {
     connection,
     client = "pg",
