@@ -1,7 +1,8 @@
 import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
 import { EventEmitter } from "events";
-import { Config, Migrator, Sql } from "knex";
+import { Knex } from "knex";
+
 import path from "path";
 import { Gauge, Histogram, Registry } from "prom-client";
 import { format as formatUrl } from "url";
@@ -10,7 +11,7 @@ import redactor from "url-auth-redactor";
 export interface KnexClient extends EventEmitter {
   // tslint:disable-next-line: no-any
   client: { pool: any };
-  migrate: Migrator;
+  migrate: Knex.Migrator;
 }
 
 export type Connection =
@@ -54,8 +55,8 @@ export interface KnexConfig {
     directory: string;
     stub: string;
   };
-  postProcessResponse?: Config["postProcessResponse"];
-  wrapIdentifier?: Config["wrapIdentifier"];
+  postProcessResponse?: Knex.Config["postProcessResponse"];
+  wrapIdentifier?: Knex.Config["wrapIdentifier"];
 }
 
 interface Logger {
@@ -116,7 +117,7 @@ export function createConfig(opts: ConfigOptions): KnexConfig {
       stub: path.join(__dirname, "./_migration-template.js")
     },
     postProcessResponse: (result: unknown /*, queryContext*/) => {
-      if (typeof result !== "object" || result === null) {
+      if (typeof result !== "object" || result === null || Object.keys(result).length === 0) {
         return result;
       }
       return camelcaseKeys(result);
@@ -147,12 +148,12 @@ export async function setup(
 
   // Request time logging
   dbClient
-    .on("query", (query: Sql) => {
+    .on("query", (query: Knex.Sql) => {
       if (query.bindings) {
         queryStartTimes.set(query.bindings, process.hrtime());
       }
     })
-    .on("query-response", (result: unknown, query: Sql) => {
+    .on("query-response", (result: unknown, query: Knex.Sql) => {
       const responseTime = process.hrtime(queryStartTimes.get(query.bindings));
 
       const ms = toMilliseconds(responseTime);
