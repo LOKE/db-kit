@@ -1,0 +1,37 @@
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres:10
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        ports:
+          - 5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install
+      - run: npm run build
+      - run: npm test
+        env:
+          RABBIT_URL: amqp://127.0.0.1:${{ job.services.rabbitmq.ports['5672'] }}
+          DATABASE_URL: postgres://postgres:postgres@localhost:${{job.services.postgres.ports[5432]}}/test
