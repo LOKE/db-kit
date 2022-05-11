@@ -1,7 +1,8 @@
 import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
 import { EventEmitter } from "events";
-import { Config, Migrator, Sql } from "knex";
+import { Knex } from "knex";
+
 import path from "path";
 import { Gauge, Histogram, Registry } from "prom-client";
 import { format as formatUrl } from "url";
@@ -10,7 +11,7 @@ import redactor from "url-auth-redactor";
 export interface KnexClient extends EventEmitter {
   // tslint:disable-next-line: no-any
   client: { pool: any };
-  migrate: Migrator;
+  migrate: Knex.Migrator;
 }
 
 export type Connection =
@@ -54,8 +55,8 @@ export interface KnexConfig {
     directory: string;
     stub: string;
   };
-  postProcessResponse?: Config["postProcessResponse"];
-  wrapIdentifier?: Config["wrapIdentifier"];
+  postProcessResponse?: Knex.Config["postProcessResponse"];
+  wrapIdentifier?: Knex.Config["wrapIdentifier"];
 }
 
 interface Logger {
@@ -69,35 +70,35 @@ type StringTransform = (str: string) => string;
 const poolUsedGauge = new Gauge({
   name: "knex_pool_used",
   help: "Number of non-free resources.",
-  registers: []
+  registers: [],
 });
 const poolFreeGauge = new Gauge({
   name: "knex_pool_free",
   help: "Number of free resources.",
-  registers: []
+  registers: [],
 });
 const poolPendingAcquiresGauge = new Gauge({
   name: "knex_pool_pending_acquires",
   help: "How many acquires are waiting for a resource to be released.",
-  registers: []
+  registers: [],
 });
 const poolPendingCreatesGauge = new Gauge({
   name: "knex_pool_pending_creates",
   help: "How many asynchronous create calls are running.",
-  registers: []
+  registers: [],
 });
 const queryDuration = new Histogram({
   name: "knex_query_duration_seconds",
   help: "Knex sql query durations in seconds",
   labelNames: ["method"],
-  registers: []
+  registers: [],
 });
 
 export function createConfig(opts: ConfigOptions): KnexConfig {
   const {
     connection,
     client = "pg",
-    migrationsDirectory = "./lib/postgres/migrations"
+    migrationsDirectory = "./lib/postgres/migrations",
   } = opts;
 
   if (!connection) {
@@ -109,13 +110,15 @@ export function createConfig(opts: ConfigOptions): KnexConfig {
     connection,
     pool: {
       min: 2,
-      max: 10
+      max: 10,
     },
     migrations: {
       directory: migrationsDirectory,
-      stub: path.join(__dirname, "./_migration-template.js")
+      stub: path.join(__dirname, "./_migration-template.js"),
     },
-    postProcessResponse: (result: unknown /*, queryContext*/) => {
+    postProcessResponse: (
+      result?: { [key: string]: unknown } | null /*, queryContext*/
+    ) => {
       if (typeof result !== "object" || result === null) {
         return result;
       }
@@ -124,7 +127,7 @@ export function createConfig(opts: ConfigOptions): KnexConfig {
     wrapIdentifier: (
       value: string,
       origImpl: StringTransform /*, queryContext*/
-    ) => origImpl(decamelize(value))
+    ) => origImpl(decamelize(value)),
   };
 }
 
@@ -147,12 +150,12 @@ export async function setup(
 
   // Request time logging
   dbClient
-    .on("query", (query: Sql) => {
+    .on("query", (query: Knex.Sql) => {
       if (query.bindings) {
         queryStartTimes.set(query.bindings, process.hrtime());
       }
     })
-    .on("query-response", (result: unknown, query: Sql) => {
+    .on("query-response", (result: unknown, query: Knex.Sql) => {
       const responseTime = process.hrtime(queryStartTimes.get(query.bindings));
 
       const ms = toMilliseconds(responseTime);
@@ -229,7 +232,7 @@ export function registerMetrics(registry: Registry) {
 }
 
 const delay = (timeout: number) =>
-  new Promise(resolve => setTimeout(resolve, timeout));
+  new Promise((resolve) => setTimeout(resolve, timeout));
 
 export function formatConnection(connection: Connection) {
   if (typeof connection === "string") {
@@ -248,7 +251,7 @@ export function formatConnection(connection: Connection) {
       auth,
       host: connection.host || "127.0.0.1",
       port: connection.port,
-      pathname: connection.database
+      pathname: connection.database,
     });
   }
 }
