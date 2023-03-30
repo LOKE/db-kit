@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        prom-client-version: [11]
+        prom-client-version: [11, 12, 13, 14]
     runs-on: ubuntu-latest
     name: Build with Prom Client ${{matrix.prom-client-version}}
     steps:
@@ -16,5 +16,5 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      # - run: npm i -D prom-client@${{matrix.prom-client-version}}
+      - run: npm i -D prom-client@${{matrix.prom-client-version}}
       - run: npm run build
