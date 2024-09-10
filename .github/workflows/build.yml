@@ -4,17 +4,38 @@ on:
       - master
 
 jobs:
-  build:
+  build_knex: # 
     strategy:
       matrix:
-        prom-client-version: [11, 12, 13, 14]
+        prom-client-version: [11, 12, 13, 14, 15]
+        knex-version: [3]
     runs-on: ubuntu-latest
-    name: Build with Prom Client ${{matrix.prom-client-version}}
+    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm i -D prom-client@${{matrix.prom-client-version}}
+      - run: npm i -D knex@${{matrix.knex-version}}
+      - run: npm run build
+  build_knex2: # knex 2 won't compile with typescript 5
+    strategy:
+      matrix:
+        prom-client-version: [11, 12, 13, 14, 15]
+        knex-version: [2]
+    runs-on: ubuntu-latest
+    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
       - run: npm ci
       - run: npm i -D prom-client@${{matrix.prom-client-version}}
+      - run: npm i -D knex@${{matrix.knex-version}}
+      - run: npm i -D typescript@4 # knex 2 won't compile with typescript 5
+      - run: npm i -D @types/node@18.18 # 18.19+ has type defs that require typescript 5
+      - run: npm i -D camelcase-keys@8 # v9 has type defs that require typescript 5
       - run: npm run build
