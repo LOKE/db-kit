@@ -4,7 +4,8 @@ import { EventEmitter } from "events";
 import { Knex } from "knex";
 
 import path from "path";
-import { Gauge, Histogram, Registry } from "prom-client";
+import { Gauge, Histogram } from "prom-client";
+import type { Registry } from "prom-client";
 import { format as formatUrl } from "url";
 import redactor from "url-auth-redactor";
 
@@ -222,7 +223,7 @@ export async function setup(
   }
 }
 
-export function registerMetrics(registry: Registry) {
+export function registerMetrics(registry: Pick<Registry, "registerMetric">) {
   registry.registerMetric(poolUsedGauge);
   registry.registerMetric(poolFreeGauge);
   registry.registerMetric(poolPendingAcquiresGauge);
