@@ -20,7 +20,7 @@
     "prom-client": ">= 14.x <= 15.x"
   },
   "dependencies": {
-    "camelcase-keys": "^9.1.3",
+    "camelcase-keys": "^7.0.2",
     "decamelize": "^6.0.0",
     "url-auth-redactor": "^1.0.2"
   },
