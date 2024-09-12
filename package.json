@@ -1,6 +1,6 @@
 {
   "name": "@loke/db-kit",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Wrapper around knex to provide some sugar such as metrics and slow query logging",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
