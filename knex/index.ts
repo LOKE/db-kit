@@ -1,5 +1,5 @@
-import camelcaseKeys from "camelcase-keys";
 import decamelize from "decamelize";
+import camelcaseKeys from "../camelcase-keys";
 import { EventEmitter } from "events";
 import { Knex } from "knex";
 
