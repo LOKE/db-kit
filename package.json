@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "camelcase": "^6.3.0",
-    "decamelize": "^6.0.0",
+    "decamelize": "^5.0.1",
     "map-obj": "^4.3.0",
     "quick-lru": "^3.0.0",
     "url-auth-redactor": "^1.0.2"
