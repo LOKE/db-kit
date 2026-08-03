@@ -4,7 +4,7 @@ on:
       - master
 
 jobs:
-  build_knex: # 
+  build_knex: #
     strategy:
       matrix:
         prom-client-version: [11, 12, 13, 14, 15]
@@ -38,4 +38,5 @@ jobs:
       - run: npm i -D typescript@4 # knex 2 won't compile with typescript 5
       - run: npm i -D @types/node@18.18 # 18.19+ has type defs that require typescript 5
       - run: npm i -D camelcase-keys@8 # v9 has type defs that require typescript 5
+      - run: npm i -D type-fest@4.21.0 # 4.22 has export type * that requires typescript 5
       - run: npm run build
