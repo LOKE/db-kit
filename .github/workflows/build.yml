@@ -4,13 +4,29 @@ on:
       - master
 
 jobs:
+  build_knex_node24:
+    strategy:
+      matrix:
+        prom-client-version: [11, 12, 13, 14, 15]
+        knex-version: [3]
+    runs-on: ubuntu-latest
+    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}} node=24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm i -D prom-client@${{matrix.prom-client-version}}
+      - run: npm i -D knex@${{matrix.knex-version}}
+      - run: npm run build
   build_knex: #
     strategy:
       matrix:
         prom-client-version: [11, 12, 13, 14, 15]
         knex-version: [3]
     runs-on: ubuntu-latest
-    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}}
+    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}} node=20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,7 +42,7 @@ jobs:
         prom-client-version: [11, 12, 13, 14, 15]
         knex-version: [2]
     runs-on: ubuntu-latest
-    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}}
+    name: Build with prom-client=${{matrix.prom-client-version}} knex=${{matrix.knex-version}} node=18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
