@@ -165,18 +165,18 @@ export async function setup(
         const ms = toMilliseconds(responseTime);
 
         const queryContext = builder.queryContext();
-        const name: string | undefined = queryContext?.name;
+        const name = queryContext?.name ?? "<unnamed>";
         const slowQueryThresholdMs: number =
           queryContext?.slowQueryThresholdMs ?? slowQueryThreshold;
 
         if (ms >= slowQueryThresholdMs) {
           logger.warn(
-            `SLOW KNEX QUERY [${formatMilliseconds(ms)}] ${name ?? query.sql}`,
+            `SLOW KNEX QUERY [${formatMilliseconds(ms)}] (${name}) ${query.sql}`,
           );
         }
 
         queryDuration.observe(
-          { method: query.method, name: name ?? "" },
+          { method: query.method, name },
           toSeconds(responseTime),
         );
       },
