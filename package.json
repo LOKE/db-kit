@@ -15,6 +15,7 @@
   },
   "author": "Dominic Smith",
   "license": "MIT",
+  "repository":  "https://github.com/loke/db-kit",
   "peerDependencies": {
     "knex": ">= 2.x <= 3.x",
     "prom-client": ">= 14.x <= 15.x"
