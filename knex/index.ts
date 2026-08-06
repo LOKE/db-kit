@@ -91,7 +91,7 @@ const poolPendingCreatesGauge = new Gauge({
 const queryDuration = new Histogram({
   name: "knex_query_duration_seconds",
   help: "Knex sql query durations in seconds",
-  labelNames: ["method"],
+  labelNames: ["method", "name"],
   registers: [],
 });
 
@@ -118,7 +118,7 @@ export function createConfig(opts: ConfigOptions): KnexConfig {
       stub: path.join(__dirname, "./_migration-template.js"),
     },
     postProcessResponse: (
-      result?: { [key: string]: unknown } | null /*, queryContext*/
+      result?: { [key: string]: unknown } | null /*, queryContext*/,
     ) => {
       if (typeof result !== "object" || result === null) {
         return result;
@@ -127,7 +127,7 @@ export function createConfig(opts: ConfigOptions): KnexConfig {
     },
     wrapIdentifier: (
       value: string,
-      origImpl: StringTransform /*, queryContext*/
+      origImpl: StringTransform /*, queryContext*/,
     ) => origImpl(decamelize(value)),
   };
 }
@@ -145,7 +145,7 @@ const queryStartTimes = new WeakMap();
 export async function setup(
   dbClient: KnexClient,
   logger: Logger = console,
-  opts: SetupOptions = {}
+  opts: SetupOptions = {},
 ) {
   const { slowQueryThreshold = 200, migrateUp = true } = opts;
 
@@ -156,16 +156,31 @@ export async function setup(
         queryStartTimes.set(query.bindings, process.hrtime());
       }
     })
-    .on("query-response", (result: unknown, query: Knex.Sql) => {
-      const responseTime = process.hrtime(queryStartTimes.get(query.bindings));
+    .on(
+      "query-response",
+      (result: unknown, query: Knex.Sql, builder: Knex.QueryBuilder) => {
+        const responseTime = process.hrtime(
+          queryStartTimes.get(query.bindings),
+        );
+        const ms = toMilliseconds(responseTime);
 
-      const ms = toMilliseconds(responseTime);
-      if (ms >= slowQueryThreshold) {
-        logger.warn(`SLOW KNEX QUERY [${formatMilliseconds(ms)}] ${query.sql}`);
-      }
+        const queryContext = builder.queryContext();
+        const name = queryContext?.name ?? "<unnamed>";
+        const slowQueryThresholdMs: number =
+          queryContext?.slowQueryThresholdMs ?? slowQueryThreshold;
 
-      queryDuration.observe({ method: query.method }, toSeconds(responseTime));
-    });
+        if (ms >= slowQueryThresholdMs) {
+          logger.warn(
+            `SLOW KNEX QUERY [${formatMilliseconds(ms)}] (${name}) ${query.sql}`,
+          );
+        }
+
+        queryDuration.observe(
+          { method: query.method, name },
+          toSeconds(responseTime),
+        );
+      },
+    );
 
   // Connection pool metrics
   setInterval(() => {
@@ -200,7 +215,7 @@ export async function setup(
         const [batchNo, log] = await dbClient.migrate.latest();
         if (log.length) {
           logger.info(
-            `Migration batch ${batchNo} run: ${log.length} migrations`
+            `Migration batch ${batchNo} run: ${log.length} migrations`,
           );
           logger.info(log.join("\n"));
         }

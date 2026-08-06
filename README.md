@@ -115,3 +115,18 @@ function main() {
   // ...
 }
 ```
+
+## Slow Query Logging
+
+Using `knex.setup()` adds tracking for slow queries.
+
+To customize the behavior of this tracking, use `QueryBuilder.queryContext({name, slowQueryThresholdMs})`. For example:
+
+```ts
+await dbClient.select("*").from("Customers").queryContext({ name: "getCustomers" });
+
+```
+
+If provided, `name` will be used to identify the query in logs, in place of logging the full SQL. It will also be included as a label in the `knex_query_duration_seconds` metric provided by this package.
+
+By default, `slowQueryThresholdMs` is `200`. This can be customized on a per-query basis as appropriate.
